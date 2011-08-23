@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>neural: Main Page</title>
+<title>neural: Member List</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/search.js"></script>
@@ -35,9 +35,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
   <div id="navrow1" class="tabs">
     <ul class="tablist">
-      <li class="current"><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="namespaces.html"><span>Namespaces</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Classes</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li id="searchli">
         <div id="MSearchBox" class="MSearchBoxInactive">
@@ -57,6 +57,14 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       </li>
     </ul>
   </div>
+  <div id="navrow2" class="tabs2">
+    <ul class="tablist">
+      <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
+      <li><a href="classes.html"><span>Class&#160;Index</span></a></li>
+      <li><a href="inherits.html"><span>Class&#160;Hierarchy</span></a></li>
+      <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
+    </ul>
+  </div>
 </div>
 <div id="side-nav" class="ui-resizable side-nav-resizable">
   <div id="nav-tree">
@@ -68,15 +76,22 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <script type="text/javascript">
-  initNavTree('index.html','');
+  initNavTree('structneural_1_1Brain.html','');
 </script>
 <div id="doc-content">
 <div class="header">
   <div class="headertitle">
-<h1>neural Documentation</h1>  </div>
+<h1>neural::Brain&lt; Traits &gt; Member List</h1>  </div>
 </div>
 <div class="contents">
-</div>
+This is the complete list of members for <a class="el" href="structneural_1_1Brain.html">neural::Brain&lt; Traits &gt;</a>, including all inherited members.<table>
+  <tr class="memlist"><td><a class="el" href="structneural_1_1Brain.html#a8752d0ce7aa15fe5c30b3a3da339afaf">Brain</a>(unsigned int numInput, unsigned int numHidden, unsigned int numOutput)</td><td><a class="el" href="structneural_1_1Brain.html">neural::Brain&lt; Traits &gt;</a></td><td><code> [inline]</code></td></tr>
+  <tr class="memlist"><td><a class="el" href="structneural_1_1Brain.html#aab48a3dddf08fe1cfdf05d55162485db">Brain</a>(std::istream &amp;is)</td><td><a class="el" href="structneural_1_1Brain.html">neural::Brain&lt; Traits &gt;</a></td><td><code> [inline, explicit]</code></td></tr>
+  <tr class="memlist"><td><a class="el" href="structneural_1_1Brain.html#a7befc548596e19ff19aa54ca571fca60">learn</a>(const typename Traits::Stimulus &amp;stimulus, const typename Traits::Response &amp;desired)</td><td><a class="el" href="structneural_1_1Brain.html">neural::Brain&lt; Traits &gt;</a></td><td><code> [inline]</code></td></tr>
+  <tr class="memlist"><td><a class="el" href="structneural_1_1Brain.html#a7423616371baef5f56fee2824453c7c0">net</a>()</td><td><a class="el" href="structneural_1_1Brain.html">neural::Brain&lt; Traits &gt;</a></td><td><code> [inline]</code></td></tr>
+  <tr class="memlist"><td><a class="el" href="structneural_1_1Brain.html#afa79ae94fc242084fdee96aea7e519fc">operator()</a>(const typename Traits::Stimulus &amp;stimulus)</td><td><a class="el" href="structneural_1_1Brain.html">neural::Brain&lt; Traits &gt;</a></td><td><code> [inline]</code></td></tr>
+  <tr class="memlist"><td><a class="el" href="structneural_1_1Brain.html#a7e9b0a2a24e557cda6136c26509eb629">operator&lt;&lt;</a>(std::ostream &amp;os, const Brain &amp;brain)</td><td><a class="el" href="structneural_1_1Brain.html">neural::Brain&lt; Traits &gt;</a></td><td><code> [friend]</code></td></tr>
+</table></div>
 </div>
   <div id="nav-path" class="navpath">
     <ul>

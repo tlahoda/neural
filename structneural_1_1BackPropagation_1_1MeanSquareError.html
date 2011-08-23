@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>neural: Main Page</title>
+<title>neural: neural::BackPropagation::MeanSquareError Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/search.js"></script>
@@ -35,9 +35,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
   <div id="navrow1" class="tabs">
     <ul class="tablist">
-      <li class="current"><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="namespaces.html"><span>Namespaces</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Classes</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li id="searchli">
         <div id="MSearchBox" class="MSearchBoxInactive">
@@ -57,6 +57,14 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       </li>
     </ul>
   </div>
+  <div id="navrow2" class="tabs2">
+    <ul class="tablist">
+      <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
+      <li><a href="classes.html"><span>Class&#160;Index</span></a></li>
+      <li><a href="inherits.html"><span>Class&#160;Hierarchy</span></a></li>
+      <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
+    </ul>
+  </div>
 </div>
 <div id="side-nav" class="ui-resizable side-nav-resizable">
   <div id="nav-tree">
@@ -68,18 +76,87 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <script type="text/javascript">
-  initNavTree('index.html','');
+  initNavTree('structneural_1_1BackPropagation_1_1MeanSquareError.html','');
 </script>
 <div id="doc-content">
 <div class="header">
+  <div class="summary">
+<a href="#pub-static-methods">Static Public Member Functions</a>  </div>
   <div class="headertitle">
-<h1>neural Documentation</h1>  </div>
+<h1>neural::BackPropagation::MeanSquareError Struct Reference</h1>  </div>
 </div>
 <div class="contents">
+<!-- doxytag: class="neural::BackPropagation::MeanSquareError" -->
+<p><code>#include &lt;<a class="el" href="BackPropagation_8h_source.html">BackPropagation.h</a>&gt;</code></p>
+
+<p><a href="structneural_1_1BackPropagation_1_1MeanSquareError-members.html">List of all members.</a></p>
+<table class="memberdecls">
+<tr><td colspan="2"><h2><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr><td class="memTemplParams" colspan="2">template&lt;class Response &gt; </td></tr>
+<tr><td class="memTemplItemLeft" align="right" valign="top">static float&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structneural_1_1BackPropagation_1_1MeanSquareError.html#a087f6c95f6171161e155c7be93132f80">calculate</a> (const Response &amp;desired, Response &amp;obtained)</td></tr>
+</table>
+<hr/><a name="_details"></a><h2>Detailed Description</h2>
+<div class="textblock"><p>mean square error. </p>
+
+<p>Definition at line <a class="el" href="BackPropagation_8h_source.html#l00173">173</a> of file <a class="el" href="BackPropagation_8h_source.html">BackPropagation.h</a>.</p>
+</div><hr/><h2>Member Function Documentation</h2>
+<a class="anchor" id="a087f6c95f6171161e155c7be93132f80"></a><!-- doxytag: member="neural::BackPropagation::MeanSquareError::calculate" ref="a087f6c95f6171161e155c7be93132f80" args="(const Response &amp;desired, Response &amp;obtained)" -->
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class Response &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">static float neural::BackPropagation::MeanSquareError::calculate </td>
+          <td>(</td>
+          <td class="paramtype">const Response &amp;&#160;</td>
+          <td class="paramname"><em>desired</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Response &amp;&#160;</td>
+          <td class="paramname"><em>obtained</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [inline, static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>Calculates the mean square error between the obtain and desired responses.</p>
+<dl><dt><b>Template Parameters:</b></dt><dd>
+  <table class="">
+    <tr><td class="paramname">Response,The</td><td>type of the response.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">desired</td><td>const Response&amp;, The desited response. </td></tr>
+    <tr><td class="paramname">obtained</td><td>const Response&amp;, The obtained response.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>float, The mean square error. </dd></dl>
+
+<p>Definition at line <a class="el" href="BackPropagation_8h_source.html#l00185">185</a> of file <a class="el" href="BackPropagation_8h_source.html">BackPropagation.h</a>.</p>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
+<li><a class="el" href="BackPropagation_8h_source.html">BackPropagation.h</a></li>
+</ul>
 </div>
 </div>
   <div id="nav-path" class="navpath">
     <ul>
+      <li class="navelem"><a class="el" href="namespaceneural.html">neural</a>      </li>
+      <li class="navelem"><a class="el" href="classneural_1_1BackPropagation.html">BackPropagation</a>      </li>
+      <li class="navelem"><a class="el" href="structneural_1_1BackPropagation_1_1MeanSquareError.html">MeanSquareError</a>      </li>
       <li class="footer">Generated on Tue Aug 23 2011 16:56:01 for neural by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>

@@ -1,0 +1,5 @@
+<map id="G" name="G">
+<area shape="rect" id="node2" href="$structneural_1_1Layer.html" title="{neural::Layer\&lt; Neuron \&gt;\n|&#45; neurons_\l|+ Layer()\l+ begin()\l+ begin()\l+ end()\l+ end()\l+ size()\l+ operator()()\l}" alt="" coords="43,413,205,603"/>
+<area shape="rect" id="node4" href="$structneural_1_1basic__Layer.html" title="{neural::basic_Layer\n||}" alt="" coords="5,261,139,347"/>
+<area shape="rect" id="node8" href="$structneural_1_1Neuron.html" title="{neural::Neuron\&lt; ActivationFunction, InputStructure, OutputStructure \&gt;\n|&#45; val_\l&#45; threshold_\l&#45; error_\l|+ Neuron()\l+ operator()()\l+ val()\l+ threshold()\l+ error()\l}" alt="" coords="23,5,452,195"/>
+</map>
