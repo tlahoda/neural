@@ -33,31 +33,36 @@
 #include <iostream>
 #include <cstdlib>
 
-#include "linear_algebra.h"
+#include "math.h"
 
 namespace neural { 
   using namespace std;
 
   template<typename iter>
-  void calcOutputError (iter dBeg, iter dEnd, iter oBeg, iter oEnd, iter onesBeg, iter onesEnd, iter diffBeg, iter diffEnd, iter outErr) {
-    element_sub (dBeg, dEnd, oBeg, diffBeg);
-    element_sub (onesBeg, onesEnd, oBeg, outErr);
-    element_prod (oBeg, oEnd, outErr, outErr);
-    element_prod (diffBeg, diffEnd, outErr, outErr);
+  void calcOutputError (iter dBeg, iter oBeg, iter outBeg, iter outEnd) {
+    for_each (outBeg, outEnd, [&dBeg, &oBeg] (float& ele) {
+      ele = (*dBeg - *oBeg) * *oBeg * (1.0f - *oBeg);
+      ++dBeg;
+      ++oBeg;
+    });
   };
 
   template<typename thetaIter, typename lyrIter, typename vecIter>
-  void calcHiddenError (thetaIter thetaBeg, thetaIter thetaEnd, vecIter errBeg, vecIter wBeg, vecIter wEnd, vecIter onesBeg, vecIter onesEnd, lyrIter layerBeg, vecIter layerEnd, vecIter errorBeg) {
+  void calcHiddenError (thetaIter thetaBeg, thetaIter thetaEnd, vecIter errBeg, vecIter wBeg, lyrIter layerBeg, vecIter outBeg, vecIter outEnd) {
     prod (thetaBeg, thetaEnd, errBeg, wBeg);
-    element_sub (onesBeg, onesEnd, layerBeg, errorBeg);
-    element_prod (layerBeg, layerEnd, errorBeg, errorBeg);
-    element_prod (wBeg, wEnd, errorBeg, errorBeg);
+    for_each (outBeg, outEnd, [&wBeg, &layerBeg] (float& ele) {
+      ele = *wBeg * *layerBeg * (1.0f - *layerBeg);
+      ++wBeg;
+      ++layerBeg;
+    });
   };
 
   template<typename thetaIter, typename layerIter, typename errIter>
   void adjustTheta (thetaIter thetaBeg, thetaIter thetaEnd, layerIter layerBeg, errIter errBeg, float learningRate) {
     for_each (thetaBeg, thetaEnd, [&layerBeg, &errBeg, &learningRate] (Vector& row) {
-      float adjustment = *(layerBeg++) * *(errBeg++) * learningRate;
+      float adjustment = *layerBeg * *errBeg * learningRate;
+      ++layerBeg;
+      ++errBeg;
       for_each (row.begin (), row.end (), [&adjustment] (float& ele) {
         ele += adjustment;
     });});
@@ -65,36 +70,41 @@ namespace neural {
 
   class NeuralNet {
     public:
-      NeuralNet (const vector<int>& topology) 
-        : layers_ (topology.size ()),
-          thetas_ (topology.size () - 1) {
+      template<typename TopoIter>
+      NeuralNet (TopoIter topoBeg, TopoIter topoEnd)
+        : layers_ (),
+          thetas_ (distance (topoBeg, topoEnd) - 1) {
 
-        for (unsigned int i = 0, numLayers = layers_.size (); i < numLayers; ++i)
-          layers_[i] = Vector (topology[i] + 1);
+        for_each (topoBeg, topoEnd, [&layers_] (int n) {
+          layers_.push_back (Vector (n + 1));
+        });
 
-        for (unsigned int i = 0, numThetas = thetas_.size (); i < numThetas; ++i)
-          thetas_[i] = Matrix (topology[i] + 1, Vector (topology[i + 1] + 1));
-
-        for_each (thetas_.begin (), thetas_.end (), [] (Matrix& theta) {
+        auto nextTopo = topoBeg;
+        for_each (thetas_.begin (), thetas_.end (), [&topoBeg, &nextTopo] (Matrix& theta) {
+          theta = Matrix (*(topoBeg++) + 1, Vector (*(++nextTopo) + 1));
           for_each (theta.begin (), theta.end (), [] (Vector& row) {
             for_each (row.begin (), row.end (), [] (float& ele) {
               ele = 0.4f / ((float)(rand () % 10 + 1));
         });});});
       };
 
-      NeuralNet (const vector<int>& topology, vector<Matrix>& thetas) 
-        : layers_ (topology.size ()),
-          thetas_ (topology.size () - 1) {
+      template<typename TopoIter>
+      NeuralNet (TopoIter topoBeg, TopoIter topoEnd, vector<Matrix>& thetas) 
+        : layers_ (),
+          thetas_ (distance (topoBeg, topoEnd) - 1) {
 
-        for (unsigned int i = 0, numLayers = layers_.size (); i < numLayers; ++i)
-          layers_[i] = Vector (topology[i] + 1);
+        for_each (topoBeg, topoEnd, [&layers_] (int n) {
+          layers_.push_back (Vector (n + 1));
+        });
 
-        for (unsigned int i = 0, numThetas = thetas_.size (); i < numThetas; ++i)
-          thetas_[i] = Matrix (topology[i] + 1, Vector (topology[i + 1] + 1));
-
-        for (int i = 0, numThetas = thetas.size (); i < numThetas; ++i)
+        auto nextTopo = topoBeg;
+        for (int i = 0, numThetas = thetas.size (); i < numThetas; ++i) {
+          thetas_[i] = Matrix (*topoBeg + 1, Vector (*nextTopo + 1));
+          ++topoBeg;
+          ++nextTopo;
           for (int j = 0, numRows = thetas[i].size (); j < numRows; ++j)
             copy (thetas[i][j].begin (), thetas[i][j].end (), thetas_[i][j].begin ());
+        }
       };
 
       Vector& operator() (const Vector& stimulus) {
@@ -126,9 +136,6 @@ namespace neural {
         for (unsigned int i = 0; i < w.size (); ++i)
           w[i] = Vector (layers_[i + 1].size ());
 
-        Vector ones (desired.size (), 1.0f);
-        Vector diff (desired.size ());
-
         float allowableErrorMargin = 0.0000001f;
 
         int count = 0;
@@ -145,10 +152,10 @@ namespace neural {
             oldErr = tempErr;
             plateau = 0;
           }
-          calcOutputError (desired.begin (), desired.end (), obtained.begin (), obtained.end (), ones.begin (), ones.end (), diff.begin (), diff.end (), errors[errors.size () - 1].begin ());
+          calcOutputError (desired.begin (), obtained.begin (), errors[errors.size () - 1].begin (), errors[errors.size () - 1].end ());
 
           for (int i = thetas_.size () - 1; i > 0; --i)
-            calcHiddenError (thetas_[i].begin (), thetas_[i].end (), errors[i].begin (), w[i].begin (), w[i].end (), ones.begin (), ones.end (), layers_[i + 1].begin (), layers_[i + 1].end (), errors[i - 1].begin ());
+            calcHiddenError (thetas_[i].begin (), thetas_[i].end (), errors[i].begin (), w[i].begin (), layers_[i + 1].begin (), errors[i - 1].begin (), errors[i - 1].end ());
 
           float learningRate = ((err == 0.0f || err == 1.0f) ? 1.0f : 1.0f / abs (log (err))) * plateauFactor;
           for (int i = thetas_.size () - 1; i >= 0; --i)

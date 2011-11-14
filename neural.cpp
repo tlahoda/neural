@@ -30,7 +30,7 @@
 #include <iostream>
 #include <vector>
 
-#include "linear_algebra.h"
+#include "math.h"
 #include "NeuralNet.h"
 
 int main (int argc, char** argv) {
@@ -49,12 +49,9 @@ int main (int argc, char** argv) {
   for (int i = 0; i < numNodes; ++i)
     desired[i + 1] = 1.0f - (((float)i) / ((float)numNodes));
 
-  vector<int> topology (3);
-  topology[0] = numNodes;
-  topology[1] = numNodes;
-  topology[2] = numNodes;
+  vector<int> topology = {numNodes, numNodes, numNodes};
 
-  NeuralNet net (topology);
+  NeuralNet net (topology.begin (), topology.end ());
   net.learn (input, desired);
 
   Vector& results = net (input);
