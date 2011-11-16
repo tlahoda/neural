@@ -3,27 +3,23 @@
  *
  * Copyright (c) 2011 Thomas P. Lahoda
  *
- * Permission is hereby granted, free of charge, to any
- * person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the
- * Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute,
- * sublicense, and/or sell copies of the Software, and to permit
- * persons to whom the Software is furnished to do so, subject
- * to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall
- * be included in all copies or substantial portions of the
- * Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
- * KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
- * PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
- * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
- * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 #ifndef NEURAL_NEURALNET_H
 #define NEURAL_NEURALNET_H
@@ -68,6 +64,25 @@ namespace neural {
     });});
   };
 
+  float calcPlateauFactor (float err, float& oldErr, int& plateau) {
+    float tempErr = round (err, 1000000);
+    if (tempErr >= oldErr) {
+      ++plateau;
+      return ((plateau < 3) ? 1.0f : abs (log (static_cast<float> (plateau))));
+    }
+    oldErr = tempErr;
+    plateau = 0;
+    return 1.0f;
+  };
+
+  void randomInitThetas (vector<Matrix>& thetas) {
+    for_each (thetas.begin (), thetas.end (), [] (Matrix& theta) {
+      for_each (theta.begin (), theta.end (), [] (Vector& row) {
+        for_each (row.begin (), row.end (), [] (float& ele) {
+          ele = 0.4f / static_cast<float> (rand () % 10 + 1);
+    });});});
+  };
+
   class NeuralNet {
     public:
       template<typename TopoIter>
@@ -80,12 +95,14 @@ namespace neural {
         });
 
         auto nextTopo = topoBeg;
-        for_each (thetas_.begin (), thetas_.end (), [&topoBeg, &nextTopo] (Matrix& theta) {
-          theta = Matrix (*(topoBeg++) + 1, Vector (*(++nextTopo) + 1));
-          for_each (theta.begin (), theta.end (), [] (Vector& row) {
-            for_each (row.begin (), row.end (), [] (float& ele) {
-              ele = 0.4f / ((float)(rand () % 10 + 1));
-        });});});
+        transform (topoBeg, --topoEnd, ++nextTopo, thetas_.begin (), [] (int m, int n) {
+          Matrix mat;
+          for (int i = 0; i < m + 1; ++i)
+            mat.push_back (Vector (n + 1));
+          return mat;
+        });
+
+        //randomInitThetas (thetas_);
       };
 
       template<typename TopoIter>
@@ -98,13 +115,16 @@ namespace neural {
         });
 
         auto nextTopo = topoBeg;
-        for (int i = 0, numThetas = thetas.size (); i < numThetas; ++i) {
-          thetas_[i] = Matrix (*topoBeg + 1, Vector (*nextTopo + 1));
-          ++topoBeg;
-          ++nextTopo;
+        transform (topoBeg, --topoEnd, ++nextTopo, thetas_.begin (), [] (int m, int n) {
+          Matrix mat;
+          for (int i = 0; i < m + 1; ++i)
+            mat.push_back (Vector (n + 1));
+          return mat;
+        });
+
+        for (int i = 0, numThetas = thetas_.size (); i < numThetas; ++i)
           for (int j = 0, numRows = thetas[i].size (); j < numRows; ++j)
             copy (thetas[i][j].begin (), thetas[i][j].end (), thetas_[i][j].begin ());
-        }
       };
 
       Vector& operator() (const Vector& stimulus) {
@@ -125,7 +145,40 @@ namespace neural {
         return *layerIter;
       };
 
-      void learn (Vector& stimulus, Vector& desired) {
+      void learn1 (Vector& stimulus, Vector& desired) {
+        Vector& obtained = operator() (stimulus);
+
+        Matrix errors (thetas_.size ());
+        for (unsigned int i = 0; i < errors.size (); ++i)
+          errors[i] = Vector (layers_[i + 1].size ());
+
+        Matrix w (thetas_.size ());
+        for (unsigned int i = 0; i < w.size (); ++i)
+          w[i] = Vector (layers_[i + 1].size ());
+
+        float allowableErrorMargin = 0.0000001f;
+
+        int count = 0;
+        float err = 0.0f;
+        while ((err = meanSquaredError (desired.begin (), desired.end (), obtained.begin (), obtained.end ())) > allowableErrorMargin) {
+          Vector& error = errors[errors.size () - 1];
+          calcOutputError (desired.begin (), obtained.begin (), error.begin (), error.end ());
+
+          for (int i = thetas_.size () - 1; i > 0; --i)
+            calcHiddenError (thetas_[i].begin (), thetas_[i].end (), errors[i].begin (), w[i].begin (), layers_[i + 1].begin (), errors[i - 1].begin (), errors[i - 1].end ());
+
+          float learningRate = 0.25f;
+          for (int i = thetas_.size () - 1; i >= 0; --i)
+            adjustTheta (thetas_[i].begin (), thetas_[i].end (), layers_[i].begin (), errors[i].begin (), learningRate);
+
+          obtained = operator() (stimulus);
+          cout << count << " err1 " << err << " " << (learningRate / 4.0f) << endl;
+          ++count;
+        }
+        cout << "learn1 " << count << endl;
+      };
+
+      void learn3 (Vector& stimulus, Vector& desired) {
         Vector& obtained = operator() (stimulus);
 
         Matrix errors (thetas_.size ());
@@ -143,29 +196,26 @@ namespace neural {
         float err = 0.0f;
         float oldErr = 0.0f;
         while ((err = meanSquaredError (desired.begin (), desired.end (), obtained.begin (), obtained.end ())) > allowableErrorMargin) {
-          float tempErr = round (err, 100000);
-          float plateauFactor = 1.0f;
-          if (tempErr == oldErr) {
-            ++plateau;
-            plateauFactor = ((plateau < 3) ? 1.0f : abs (log ((float)plateau)));
-          } else {
-            oldErr = tempErr;
-            plateau = 0;
-          }
-          calcOutputError (desired.begin (), obtained.begin (), errors[errors.size () - 1].begin (), errors[errors.size () - 1].end ());
+          Vector& error = errors[errors.size () - 1];
+          calcOutputError (desired.begin (), obtained.begin (), error.begin (), error.end ());
 
           for (int i = thetas_.size () - 1; i > 0; --i)
             calcHiddenError (thetas_[i].begin (), thetas_[i].end (), errors[i].begin (), w[i].begin (), layers_[i + 1].begin (), errors[i - 1].begin (), errors[i - 1].end ());
 
+          float plateauFactor = calcPlateauFactor (err, oldErr, plateau);
+          /*if (plateauFactor > 3.0f) {
+            plateauFactor = 1.0f;
+            plateau = 0;
+          }*/
           float learningRate = ((err == 0.0f || err == 1.0f) ? 1.0f : 1.0f / abs (log (err))) * plateauFactor;
           for (int i = thetas_.size () - 1; i >= 0; --i)
             adjustTheta (thetas_[i].begin (), thetas_[i].end (), layers_[i].begin (), errors[i].begin (), learningRate);
 
           obtained = operator() (stimulus);
-          cout << err << " " << (learningRate / 4.0f)  << " " << (plateau / 1000.0f) << endl;
+          cout << count << "\terr3 " << err << " " << (learningRate/ 4.0f)  << " " << (plateauFactor / 1000.0f) << endl;
           ++count;
         }
-        cout << "learn " << count << endl;
+        cout << "learn3 " << count << endl;
       };
 
     private:
