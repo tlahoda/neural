@@ -29,7 +29,7 @@
 all: neural
 
 neural: neural.cpp
-	g++ -O5 -Wall -std=gnu++0x neural.cpp -o neural
+	g++ -O5 -Wall -std=gnu++0x neural.cpp -I../boost_1_47_0 ../boost_1_47_0/stage/lib/libboost_thread.a -lpthread -o neural
 
 clean:
 	rm -f neural
