@@ -64,17 +64,6 @@ namespace neural {
     });});
   };
 
-  float calcPlateauFactor (float err, float& oldErr, int& plateau) {
-    float tempErr = round (err, 1000000);
-    if (tempErr >= oldErr) {
-      ++plateau;
-      return ((plateau < 3) ? 1.0f : abs (log (static_cast<float> (plateau))));
-    }
-    oldErr = tempErr;
-    plateau = 0;
-    return 1.0f;
-  };
-
   void randomInitThetas (vector<Matrix>& thetas) {
     for_each (thetas.begin (), thetas.end (), [] (Matrix& theta) {
       for_each (theta.begin (), theta.end (), [] (Vector& row) {
