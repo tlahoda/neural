@@ -43,9 +43,9 @@ namespace neural {
     });
   };
 
-  template<typename thetaIter, typename lyrIter, typename vecIter>
-  void calcHiddenError (thetaIter thetaBeg, thetaIter thetaEnd, vecIter errBeg, vecIter wBeg, lyrIter layerBeg, vecIter outBeg, vecIter outEnd) {
-    prod (thetaBeg, thetaEnd, errBeg, wBeg);
+  template<typename layerIter, typename vecIter>
+  void calcHiddenError (vecIter wBeg, layerIter layerBeg, vecIter outBeg, vecIter outEnd) {
+    //prod (thetaBeg, thetaEnd, errBeg, wBeg);
     for_each (outBeg, outEnd, [&wBeg, &layerBeg] (float& ele) {
       ele = *wBeg * *layerBeg * (1.0f - *layerBeg);
       ++wBeg;
@@ -101,8 +101,6 @@ namespace neural {
             mat.push_back (Vector (n + 1));
           return mat;
         });
-
-        //randomInitThetas (thetas_);
       };
 
       template<typename TopoIter>
@@ -132,7 +130,7 @@ namespace neural {
         copy (stimulus.begin (), stimulus.end (), ++(layerIter->begin ()));
 
         Vector z (layerIter->size ());
-        for_each (thetas_.begin (), thetas_.end (), [&] (Matrix& theta) {
+        for_each (thetas_.begin (), thetas_.end (), [&layerIter, &z] (Matrix& theta) {
           (*layerIter)[0] = 1.0f;
 
           prod (theta.begin (), theta.end (), layerIter->begin (), z.begin ());
@@ -145,18 +143,16 @@ namespace neural {
         return *layerIter;
       };
 
-      void learn1 (Vector& stimulus, Vector& desired) {
+      template<typename LearningRate>
+      void learn (Vector& stimulus, Vector& desired, LearningRate& lr, float allowableErrorMargin) {
         Vector& obtained = operator() (stimulus);
 
-        Matrix errors (thetas_.size ());
-        for (unsigned int i = 0; i < errors.size (); ++i)
-          errors[i] = Vector (layers_[i + 1].size ());
-
-        Matrix w (thetas_.size ());
-        for (unsigned int i = 0; i < w.size (); ++i)
-          w[i] = Vector (layers_[i + 1].size ());
-
-        float allowableErrorMargin = 0.0000001f;
+        Matrix errors;
+        Matrix w;
+        for_each (++layers_.begin (), layers_.end (), [&errors, &w] (vector<float>& layer) {
+          errors.push_back (Vector (layer.size ()));
+          w.push_back (Vector (layer.size ()));
+        });
 
         int count = 0;
         float err = 0.0f;
@@ -164,58 +160,22 @@ namespace neural {
           Vector& error = errors[errors.size () - 1];
           calcOutputError (desired.begin (), obtained.begin (), error.begin (), error.end ());
 
-          for (int i = thetas_.size () - 1; i > 0; --i)
-            calcHiddenError (thetas_[i].begin (), thetas_[i].end (), errors[i].begin (), w[i].begin (), layers_[i + 1].begin (), errors[i - 1].begin (), errors[i - 1].end ());
+          for (int i = thetas_.size () - 1; i > 0; --i) {
+            prod (thetas_[i].begin (), thetas_[i].end (), errors[i].begin (), w[i].begin ());
+            calcHiddenError (w[i].begin (), layers_[i + 1].begin (), errors[i - 1].begin (), errors[i - 1].end ());
+          }
 
-          float learningRate = 0.25f;
-          for (int i = thetas_.size () - 1; i >= 0; --i)
-            adjustTheta (thetas_[i].begin (), thetas_[i].end (), layers_[i].begin (), errors[i].begin (), learningRate);
-
-          obtained = operator() (stimulus);
-          cout << count << " err1 " << err << " " << (learningRate / 4.0f) << endl;
-          ++count;
-        }
-        cout << "learn1 " << count << endl;
-      };
-
-      void learn3 (Vector& stimulus, Vector& desired) {
-        Vector& obtained = operator() (stimulus);
-
-        Matrix errors (thetas_.size ());
-        for (unsigned int i = 0; i < errors.size (); ++i)
-          errors[i] = Vector (layers_[i + 1].size ());
-
-        Matrix w (thetas_.size ());
-        for (unsigned int i = 0; i < w.size (); ++i)
-          w[i] = Vector (layers_[i + 1].size ());
-
-        float allowableErrorMargin = 0.0000001f;
-
-        int count = 0;
-        int plateau = 0;
-        float err = 0.0f;
-        float oldErr = 0.0f;
-        while ((err = meanSquaredError (desired.begin (), desired.end (), obtained.begin (), obtained.end ())) > allowableErrorMargin) {
-          Vector& error = errors[errors.size () - 1];
-          calcOutputError (desired.begin (), obtained.begin (), error.begin (), error.end ());
-
-          for (int i = thetas_.size () - 1; i > 0; --i)
-            calcHiddenError (thetas_[i].begin (), thetas_[i].end (), errors[i].begin (), w[i].begin (), layers_[i + 1].begin (), errors[i - 1].begin (), errors[i - 1].end ());
-
-          float plateauFactor = calcPlateauFactor (err, oldErr, plateau);
-          /*if (plateauFactor > 3.0f) {
-            plateauFactor = 1.0f;
-            plateau = 0;
-          }*/
-          float learningRate = ((err == 0.0f || err == 1.0f) ? 1.0f : 1.0f / abs (log (err))) * plateauFactor;
-          for (int i = thetas_.size () - 1; i >= 0; --i)
-            adjustTheta (thetas_[i].begin (), thetas_[i].end (), layers_[i].begin (), errors[i].begin (), learningRate);
+          float learningRate = lr (err);
+          
+          auto layerIter = layers_.begin (), errorIter = errors.begin ();
+          for_each (thetas_.begin (), thetas_.end (), [&layerIter, &errorIter, &learningRate] (Matrix& theta) {
+            adjustTheta (theta.begin (), theta.end (), (layerIter++)->begin (), (errorIter++)->begin (), learningRate);
+          });
 
           obtained = operator() (stimulus);
-          cout << count << "\terr3 " << err << " " << (learningRate/ 4.0f)  << " " << (plateauFactor / 1000.0f) << endl;
-          ++count;
+          cout << ++count << " err " << err << " " << (learningRate / 4.0f) << endl;
         }
-        cout << "learn3 " << count << endl;
+        cout << "learn " << count << endl;
       };
 
     private:

@@ -33,6 +33,34 @@
 #include "math.h"
 #include "NeuralNet.h"
 
+namespace neural {
+  struct ConstantLearningRate {
+    ConstantLearningRate (float rate) : rate_ (rate) {};
+    
+    float operator() (float err) { return rate_; };
+
+    private:
+      float rate_;
+  }; //ConstantLearningRate
+
+  struct SawtoothLearningRate {
+    SawtoothLearningRate (float err) : err_ (err), plateau_ (0) {};
+
+    float operator() (float err) {
+      float plateauFactor = calcPlateauFactor (err, err_, plateau_);
+      //if (plateauFactor > 3.0f) {
+      //  plateauFactor = 1.0f;
+      //  plateau = 0;
+      //}
+      return ((err == 0.0f || err == 1.0f) ? 1.0f : 1.0f / abs (log (err))) * plateauFactor;
+    };
+
+    private:
+      float err_;
+      int plateau_;
+  }; //SawtoothLearningRate
+}; //neural
+
 int main (int argc, char** argv) {
   using namespace std;
   using namespace boost;
@@ -55,12 +83,14 @@ int main (int argc, char** argv) {
   thread_group threads;
 
   NeuralNet net1 (topology.begin (), topology.end ());
-  net1.learn1 (input, desired);
-  //threads.create_thread (bind (&NeuralNet::learn1, &net1, input, desired));
+  ConstantLearningRate rate1 (0.25f);
+  net1.learn (input, desired, rate1, 0.0000001f);
+  //threads.create_thread (bind (&NeuralNet::learn1, &net1, input, desired, rate1, 0.0000001f));
 
   NeuralNet net3 (topology.begin (), topology.end ());
-  net3.learn3 (input, desired);
-  //threads.create_thread (bind (&NeuralNet::learn3, &net3, input, desired));
+  SawtoothLearningRate rate3 (0.0f);
+  net3.learn (input, desired, rate3, 0.0000001f);
+  //threads.create_thread (bind (&NeuralNet::learn3, &net3, input, desired, rate3, 0.0000001f));
 
   threads.join_all ();
 
